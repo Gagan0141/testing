@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Modifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #555;
+            padding: 6px 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>CSV Modifier</h2>
+
+<input type="file" id="csvFile" accept=".csv">
+
+<div id="tableContainer"></div>
+
+<button id="downloadBtn" style="display:none;">
+    Download Modified CSV
+</button>
+
+<script>
+
+let modifiedCSV = "";
+
+document.getElementById("csvFile").addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        const text = event.target.result;
+
+        let rows = text.trim().split("\n")
+            .map(r => r.split(","));
+
+        // -------------------------
+        // Fixed Operations Example
+        // -------------------------
+
+        // Add new column
+        rows[0].push("Status");
+
+        for(let i=1;i<rows.length;i++){
+
+            // Example: Convert second column to uppercase
+            rows[i][1] = rows[i][1].toUpperCase();
+
+            // Example: Add new value
+            rows[i].push("Processed");
+        }
+
+        // -------------------------
+
+        modifiedCSV = rows.map(r=>r.join(",")).join("\n");
+
+        displayTable(rows);
+
+        document.getElementById("downloadBtn").style.display="inline-block";
+    };
+
+    reader.readAsText(file);
+
+});
+
+function displayTable(data){
+
+    let html = "<table>";
+
+    data.forEach((row,index)=>{
+
+        html += "<tr>";
+
+        row.forEach(col=>{
+
+            if(index==0)
+                html += `<th>${col}</th>`;
+            else
+                html += `<td>${col}</td>`;
+
+        });
+
+        html += "</tr>";
+
+    });
+
+    html += "</table>";
+
+    document.getElementById("tableContainer").innerHTML = html;
+}
+
+document.getElementById("downloadBtn").addEventListener("click",function(){
+
+    const blob = new Blob([modifiedCSV],{
+        type:"text/csv"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "modified.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+});
+
+</script>
+
+</body>
+</html>
